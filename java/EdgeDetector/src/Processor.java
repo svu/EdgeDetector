@@ -2,8 +2,9 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 
 public class Processor implements Runnable {
+	public final static int BORDER_WIDTH = 1;
 	private final static int NCOLORS = 3; // R G B
-	
+
 	private final int H[] = { -1, 0, 1, -2, 0, 2, -1, 0, 1 };
 	private final int V[] = { -1, -2, -1, 0, 0, 0, 1, 2, 1 };
 
@@ -25,20 +26,20 @@ public class Processor implements Runnable {
 	public void run() {
 		int[] newPixels = ed.getNewPixels();
 		final int width = image.getWidth();
-		int newPixelsOffset = EdgeDetector.BORDER_WIDTH + (width * high);
+		int newPixelsOffset = BORDER_WIDTH + (width * high);
 
 		// [0]:B [1]:G [2]:R
 		final int colorValuesH[] = new int[NCOLORS];
 		final int colorValuesV[] = new int[NCOLORS];
 
-		final int sampleWidth = 1 + (EdgeDetector.BORDER_WIDTH << 1);
+		final int sampleWidth = 1 + (BORDER_WIDTH << 1);
 		final int sampleSize = sampleWidth * sampleWidth;
 		final int samplePixels[] = new int[sampleSize];
 
-		for (int y = high; y < low; y++, newPixelsOffset += (EdgeDetector.BORDER_WIDTH << 1)) {
-			for (int x = EdgeDetector.BORDER_WIDTH; x < width - EdgeDetector.BORDER_WIDTH; x++) {
+		for (int y = high; y < low; y++, newPixelsOffset += (BORDER_WIDTH << 1)) {
+			for (int x = BORDER_WIDTH; x < width - BORDER_WIDTH; x++) {
 				// TYPE_INT_ARGB
-				image.getRGB(x - EdgeDetector.BORDER_WIDTH, y - EdgeDetector.BORDER_WIDTH, sampleWidth, sampleWidth, samplePixels, 0, sampleWidth);
+				image.getRGB(x - BORDER_WIDTH, y - BORDER_WIDTH, sampleWidth, sampleWidth, samplePixels, 0, sampleWidth);
 
 				Arrays.fill(colorValuesH, 0);
 				Arrays.fill(colorValuesV, 0);
@@ -64,9 +65,9 @@ public class Processor implements Runnable {
 			}
 		}
 
-		synchronized (image) {
-			ed.partDone();
-			image.notifyAll();
+		try {
+			ed.getBarrier().await();
+		} catch (Exception ex) {
 		}
 	}
 }
