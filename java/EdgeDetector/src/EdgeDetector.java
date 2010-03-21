@@ -16,8 +16,12 @@ public class EdgeDetector {
 	private final String outName;
 	private final CyclicBarrier barrier;
 
-	public int[] getNewPixels() {
+	public final int[] getNewPixels() {
 		return newPixels;
+	}
+
+	public final CyclicBarrier getBarrier() {
+		return barrier;
 	}
 
 	public EdgeDetector(final String inName, final String outName, final int num) {
@@ -100,10 +104,6 @@ public class EdgeDetector {
 			System.err.println(ex);
 			ex.printStackTrace();
 		}
-	}
-
-	public CyclicBarrier getBarrier() {
-		return barrier;
 	}
 
 }

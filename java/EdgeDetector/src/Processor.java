@@ -19,7 +19,7 @@ public class Processor implements Runnable {
 		this.ed = ed;
 	}
 
-	private final static int saturate(int val) {
+	private static int saturate(int val) {
 		return (val < 0) ? 0 : (val >= 0x100) ? 0xFF : val;
 	}
 
