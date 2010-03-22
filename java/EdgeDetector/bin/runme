@@ -1,8 +1,12 @@
 #!/bin/sh
 
-#javac EdgeDetector.java
+javac -d build src/*.java
 
-times=10
+times=100
+threads="1 2 4 8 16 32"
+#times=1
+#threads=1
+
 basedir="`dirname $0`/.."
 
 #infile=Duke-Guitar.png
@@ -13,8 +17,7 @@ infile="$basedir/images/Duke-Guitar.white.png"
 outfile="$basedir/tmp/out.png"
 goodfile="$basedir/tmp/good.png"
 
-for i in 1 2 4 8 16 ; do
-#for i in 1 ; do
+for i in $threads ; do
 	echo Using $i threads
 	java -classpath "$basedir/build" EdgeDetector "$infile" "$outfile" $times $i | tee "$basedir/tmp/stat.$i.log"
 	if ! diff "$outfile" "$goodfile" ; then
