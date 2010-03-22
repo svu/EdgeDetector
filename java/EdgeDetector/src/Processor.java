@@ -14,8 +14,8 @@ public class Processor implements Runnable {
 
 	public Processor(EdgeDetector ed, BufferedImage image, int high, int low) {
 		this.image = image;
-		this.high = high;
-		this.low = low;
+		this.high = high - BORDER_WIDTH;
+		this.low = low - BORDER_WIDTH;
 		this.ed = ed;
 	}
 
@@ -27,20 +27,22 @@ public class Processor implements Runnable {
 	public void run() {
 		int[] newPixels = ed.getNewPixels();
 		final int width = image.getWidth();
-		int newPixelsOffset = BORDER_WIDTH + (width * high);
+		int newPixelsOffset = BORDER_WIDTH + (width * (high + BORDER_WIDTH));
 
 		// [0]:B [1]:G [2]:R
 		final int colorValuesH[] = new int[NCOLORS];
 		final int colorValuesV[] = new int[NCOLORS];
 
-		final int sampleWidth = 1 + (BORDER_WIDTH << 1);
+		final int doubleBorder = BORDER_WIDTH << 1;
+		final int sampleWidth = 1 + doubleBorder;
 		final int sampleSize = sampleWidth * sampleWidth;
 		final int samplePixels[] = new int[sampleSize];
+		final int xLimit = width - doubleBorder;
 
-		for (int y = high; y < low; y++, newPixelsOffset += (BORDER_WIDTH << 1)) {
-			for (int x = BORDER_WIDTH; x < width - BORDER_WIDTH; x++) {
+		for (int y = high; y < low; y++, newPixelsOffset += doubleBorder) {
+			for (int x = 0; x < xLimit; x++) {
 				// TYPE_INT_ARGB
-				image.getRGB(x - BORDER_WIDTH, y - BORDER_WIDTH, sampleWidth, sampleWidth, samplePixels, 0, sampleWidth);
+				image.getRGB(x, y, sampleWidth, sampleWidth, samplePixels, 0, sampleWidth);
 
 				Arrays.fill(colorValuesH, 0);
 				Arrays.fill(colorValuesV, 0);
