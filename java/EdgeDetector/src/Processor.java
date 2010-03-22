@@ -29,7 +29,7 @@ public class Processor implements Runnable {
 		final int width = image.getWidth();
 		int newPixelsOffset = BORDER_WIDTH + (width * (high + BORDER_WIDTH));
 
-		// [0]:B [1]:G [2]:R
+		// [2]:B [1]:G [0]:R
 		final int colorValuesH[] = new int[NCOLORS];
 		final int colorValuesV[] = new int[NCOLORS];
 
@@ -48,17 +48,19 @@ public class Processor implements Runnable {
 				Arrays.fill(colorValuesV, 0);
 				for (int o = 0; o < sampleSize; o++) {
 					int pixel = samplePixels[o];
+					final int h = H[o];
+					final int v = V[o];
 					// Process bytes in B, G, R order
-					for (int c = 0; c < NCOLORS; c++) {
+					for (int c = NCOLORS; --c >= 0;) {
 						final int val = pixel & 0xFF;
-						colorValuesH[c] += val * H[o];
-						colorValuesV[c] += val * V[o];
+						colorValuesH[c] += val * h;
+						colorValuesV[c] += val * v;
 						pixel >>= 8;
 					}
 				}
 				int pixel = 0;
 				// R, then G, then B
-				for (int c = NCOLORS; --c >= 0;) {
+				for (int c = 0; c < NCOLORS; c++) {
 					final int h = saturate(colorValuesH[c]);
 					final int v = saturate(colorValuesV[c]);
 					pixel <<= 8;
