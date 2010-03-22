@@ -20,7 +20,8 @@ public class Processor implements Runnable {
 	}
 
 	private static int saturate(int val) {
-		return (val < 0) ? 0 : (val >= 0x100) ? 0xFF : val;
+		val = Math.abs(val);
+		return (val >= 0x100) ? 0xFF : val;
 	}
 
 	public void run() {
