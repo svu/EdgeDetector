@@ -35,8 +35,6 @@ public class Processor implements Runnable {
 
 		final int doubleBorder = BORDER_WIDTH << 1;
 		final int sampleWidth = 1 + doubleBorder;
-		final int sampleSize = sampleWidth * sampleWidth;
-		final int samplePixels[] = new int[sampleSize];
 		final int xLimit = width - doubleBorder;
 
 		final int fullHeight = low - high + doubleBorder;
@@ -45,28 +43,31 @@ public class Processor implements Runnable {
 		image.getRGB(0, high, width, fullHeight, allPixels, 0, width);
 
 		int baseSrcPos = 0;
-		for (int y = high; y < low; y++, newPixelsOffset += doubleBorder, baseSrcPos += doubleBorder) {
-			for (int x = 0; x < xLimit; x++, baseSrcPos++) {
-				int dstPos = 0;
-				int srcPos = baseSrcPos;
-				for (int yy = sampleWidth; --yy >= 0; srcPos += width, dstPos += sampleWidth) {
-					System.arraycopy(allPixels, srcPos, samplePixels, dstPos, sampleWidth);
-				}
+		for (int iy = low - high; --iy >= 0; newPixelsOffset += doubleBorder, baseSrcPos += doubleBorder) {
+			for (int ix = xLimit; --ix >= 0; baseSrcPos++) {
 
 				Arrays.fill(colorValuesH, 0);
 				Arrays.fill(colorValuesV, 0);
-				for (int o = 0; o < sampleSize; o++) {
-					int pixel = samplePixels[o];
-					final int h = H[o];
-					final int v = V[o];
-					// Process bytes in B, G, R order
-					for (int c = NCOLORS; --c >= 0;) {
-						final int val = pixel & 0xFF;
-						colorValuesH[c] += val * h;
-						colorValuesV[c] += val * v;
-						pixel >>= 8;
+
+				int dstPos = 0;
+				int srcPos = baseSrcPos;
+				int o = 0;
+				for (int iiy = sampleWidth; --iiy >= 0; srcPos += width, dstPos += sampleWidth) {
+					int curPos = srcPos;
+					for (int iix = sampleWidth; --iix >= 0; curPos++, o++) {
+						int pixel = allPixels[curPos];
+						final int h = H[o];
+						final int v = V[o];
+						// Process bytes in B, G, R order
+						for (int c = NCOLORS; --c >= 0;) {
+							final int val = pixel & 0xFF;
+							colorValuesH[c] += val * h;
+							colorValuesV[c] += val * v;
+							pixel >>= 8;
+						}
 					}
 				}
+
 				int pixel = 0;
 				// R, then G, then B
 				for (int c = 0; c < NCOLORS; c++) {
