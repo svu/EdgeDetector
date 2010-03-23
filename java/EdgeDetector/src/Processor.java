@@ -39,10 +39,19 @@ public class Processor implements Runnable {
 		final int samplePixels[] = new int[sampleSize];
 		final int xLimit = width - doubleBorder;
 
-		for (int y = high; y < low; y++, newPixelsOffset += doubleBorder) {
-			for (int x = 0; x < xLimit; x++) {
-				// TYPE_INT_ARGB
-				image.getRGB(x, y, sampleWidth, sampleWidth, samplePixels, 0, sampleWidth);
+		final int fullHeight = low - high + doubleBorder;
+		final int allPixels[] = new int[width * fullHeight];
+		// TYPE_INT_ARGB
+		image.getRGB(0, high, width, fullHeight, allPixels, 0, width);
+
+		int baseSrcPos = 0;
+		for (int y = high; y < low; y++, newPixelsOffset += doubleBorder, baseSrcPos += doubleBorder) {
+			for (int x = 0; x < xLimit; x++, baseSrcPos++) {
+				int dstPos = 0;
+				int srcPos = baseSrcPos;
+				for (int yy = sampleWidth; --yy >= 0; srcPos += width, dstPos += sampleWidth) {
+					System.arraycopy(allPixels, srcPos, samplePixels, dstPos, sampleWidth);
+				}
 
 				Arrays.fill(colorValuesH, 0);
 				Arrays.fill(colorValuesV, 0);
