@@ -10,7 +10,9 @@ public class EdgeDetector {
 	private long start;
 	private long last;
 
+	private BufferedImage image;
 	private int newPixels[];
+	private int oldPixels[];
 
 	private final String inName;
 	private final String outName;
@@ -18,6 +20,10 @@ public class EdgeDetector {
 
 	public final int[] getNewPixels() {
 		return newPixels;
+	}
+
+	public final int[] getOldPixels() {
+		return oldPixels;
 	}
 
 	public final CyclicBarrier getBarrier() {
@@ -36,10 +42,13 @@ public class EdgeDetector {
 		last = now;
 	}
 
-	public BufferedImage load(String filename) throws IOException {
-		final BufferedImage rv = ImageIO.read(new File(filename));
+	public void load(String filename) throws IOException {
+		image = ImageIO.read(new File(filename));
+		final int width = image.getWidth();
+		final int height = image.getHeight();
+		oldPixels = new int[width * height];
+		image.getRGB(0, 0, width, height, oldPixels, 0, width);
 		reportProgress("Loaded");
-		return rv;
 	}
 
 	public void save(BufferedImage newImage, String filename) throws IOException {
@@ -51,12 +60,12 @@ public class EdgeDetector {
 		last = start = System.nanoTime();
 		System.out.println("Started");
 
-		final BufferedImage origImage = load(inName);
-		final BufferedImage newImage = process(origImage);
+		load(inName);
+		final BufferedImage newImage = process();
 		save(newImage, outName);
 	}
 
-	public BufferedImage process(BufferedImage image) {
+	public BufferedImage process() {
 		final int width = image.getWidth();
 		final int height = image.getHeight();
 		newPixels = new int[width * height];

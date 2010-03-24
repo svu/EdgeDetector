@@ -1,5 +1,4 @@
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
 
 public class Processor implements Runnable {
 	public final static int BORDER_WIDTH = 1;
@@ -23,6 +22,7 @@ public class Processor implements Runnable {
 
 	public void run() {
 		int[] newPixels = ed.getNewPixels();
+		int[] oldPixels = ed.getOldPixels();
 		final int width = image.getWidth();
 		int newPixelsOffset = BORDER_WIDTH + (width * (high + BORDER_WIDTH));
 
@@ -30,26 +30,21 @@ public class Processor implements Runnable {
 		final int doubleWidth = width * 2;
 		final int xLimit = width - doubleBorder;
 
-		final int fullHeight = low - high + doubleBorder;
-		final int allPixels[] = new int[width * fullHeight];
-		// TYPE_INT_ARGB
-		image.getRGB(0, high, width, fullHeight, allPixels, 0, width);
-
-		int srcPos = 0;
+		int srcPos = width * high;
 		for (int iy = low - high; --iy >= 0; newPixelsOffset += doubleBorder, srcPos += doubleBorder) {
 			for (int ix = xLimit; --ix >= 0; srcPos++) {
 
 				final int srcPos1 = srcPos + width;
 				final int srcPos2 = srcPos + doubleWidth;
-				final int d11 = allPixels[srcPos];
-				final int d12 = allPixels[srcPos + 1];
-				final int d13 = allPixels[srcPos + 2];
-				final int d21 = allPixels[srcPos1];
+				final int d11 = oldPixels[srcPos];
+				final int d12 = oldPixels[srcPos + 1];
+				final int d13 = oldPixels[srcPos + 2];
+				final int d21 = oldPixels[srcPos1];
 				// no need in d22
-				final int d23 = allPixels[srcPos1 + 2];
-				final int d31 = allPixels[srcPos2];
-				final int d32 = allPixels[srcPos2 + 1];
-				final int d33 = allPixels[srcPos2 + 2];
+				final int d23 = oldPixels[srcPos1 + 2];
+				final int d31 = oldPixels[srcPos2];
+				final int d32 = oldPixels[srcPos2 + 1];
+				final int d33 = oldPixels[srcPos2 + 2];
 				int mask = 0xFF;
 				int pixel = 0;
 				// B, then G, then R
