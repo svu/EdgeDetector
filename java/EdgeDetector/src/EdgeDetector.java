@@ -98,6 +98,7 @@ public class EdgeDetector {
 			final EdgeDetector ed = new EdgeDetector(infile, outfile, numThreads);
 
 			for (int i = 0; i < times; i++) {
+				System.out.println("Iteration " + i);
 				ed.detect();
 			}
 		} catch (IOException ex) {
