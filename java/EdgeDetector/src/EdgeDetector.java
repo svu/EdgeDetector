@@ -13,6 +13,8 @@ public class EdgeDetector {
 	private BufferedImage image;
 	private int newPixels[];
 	private int oldPixels[];
+	private int width;
+	private int height;
 
 	private final String inName;
 	private final String outName;
@@ -44,15 +46,19 @@ public class EdgeDetector {
 
 	public void load(String filename) throws IOException {
 		image = ImageIO.read(new File(filename));
-		final int width = image.getWidth();
-		final int height = image.getHeight();
+		width = image.getWidth();
+		height = image.getHeight();
 		oldPixels = new int[width * height];
+		newPixels = new int[width * height];
+
 		image.getRGB(0, 0, width, height, oldPixels, 0, width);
 		reportProgress("Loaded");
 	}
 
-	public void save(BufferedImage newImage, String filename) throws IOException {
-		ImageIO.write(newImage, "PNG", new File(filename));
+	public void save(String filename) throws IOException {
+		final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		image.setRGB(0, 0, width, height, newPixels, 0, width);
+		ImageIO.write(image, "PNG", new File(filename));
 		reportProgress("Written");
 	}
 
@@ -61,15 +67,11 @@ public class EdgeDetector {
 		System.out.println("Started");
 
 		load(inName);
-		final BufferedImage newImage = process();
-		save(newImage, outName);
+		process();
+		save(outName);
 	}
 
-	public BufferedImage process() {
-		final int width = image.getWidth();
-		final int height = image.getHeight();
-		newPixels = new int[width * height];
-
+	public void process() {
 		int parts = barrier.getParties() - 1;
 		int step = height / parts;
 		int high = Processor.BORDER_WIDTH, low = step;
@@ -89,10 +91,7 @@ public class EdgeDetector {
 		} catch (BrokenBarrierException ex) {
 		}
 
-		final BufferedImage newImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		newImage.setRGB(0, 0, width, height, newPixels, 0, width);
 		reportProgress("Processed");
-		return newImage;
 	}
 
 	public static void main(String args[]) {
