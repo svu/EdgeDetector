@@ -5,9 +5,6 @@ public class Processor implements Runnable {
 	public final static int BORDER_WIDTH = 1;
 	private final static int NCOLORS = 3; // R G B
 
-	private final int H[] = { -1, 0, 1, -2, 0, 2, -1, 0, 1 };
-	private final int V[] = { -1, -2, -1, 0, 0, 0, 1, 2, 1 };
-
 	private int high, low;
 	private BufferedImage image;
 	private EdgeDetector ed;
@@ -19,9 +16,9 @@ public class Processor implements Runnable {
 		this.ed = ed;
 	}
 
-	private static int saturate(int val) {
+	private static int saturate(int val, int mask) {
 		val = Math.abs(val);
-		return (val >= 0x100) ? 0xFF : val;
+		return (val > mask) ? mask : val;
 	}
 
 	public void run() {
@@ -29,12 +26,8 @@ public class Processor implements Runnable {
 		final int width = image.getWidth();
 		int newPixelsOffset = BORDER_WIDTH + (width * (high + BORDER_WIDTH));
 
-		// [2]:B [1]:G [0]:R
-		final int colorValuesH[] = new int[NCOLORS];
-		final int colorValuesV[] = new int[NCOLORS];
-
-		final int doubleBorder = BORDER_WIDTH << 1;
-		final int sampleWidth = 1 + doubleBorder;
+		final int doubleBorder = BORDER_WIDTH * 2;
+		final int doubleWidth = width * 2;
 		final int xLimit = width - doubleBorder;
 
 		final int fullHeight = low - high + doubleBorder;
@@ -42,40 +35,33 @@ public class Processor implements Runnable {
 		// TYPE_INT_ARGB
 		image.getRGB(0, high, width, fullHeight, allPixels, 0, width);
 
-		int baseSrcPos = 0;
-		for (int iy = low - high; --iy >= 0; newPixelsOffset += doubleBorder, baseSrcPos += doubleBorder) {
-			for (int ix = xLimit; --ix >= 0; baseSrcPos++) {
+		int srcPos = 0;
+		for (int iy = low - high; --iy >= 0; newPixelsOffset += doubleBorder, srcPos += doubleBorder) {
+			for (int ix = xLimit; --ix >= 0; srcPos++) {
 
-				Arrays.fill(colorValuesH, 0);
-				Arrays.fill(colorValuesV, 0);
-
-				int dstPos = 0;
-				int srcPos = baseSrcPos;
-				int o = 0;
-				for (int iiy = sampleWidth; --iiy >= 0; srcPos += width, dstPos += sampleWidth) {
-					int curPos = srcPos;
-					for (int iix = sampleWidth; --iix >= 0; curPos++, o++) {
-						int pixel = allPixels[curPos];
-						final int h = H[o];
-						final int v = V[o];
-						// Process bytes in B, G, R order
-						for (int c = NCOLORS; --c >= 0;) {
-							final int val = pixel & 0xFF;
-							colorValuesH[c] += val * h;
-							colorValuesV[c] += val * v;
-							pixel >>= 8;
-						}
-					}
-				}
-
+				final int srcPos1 = srcPos + width;
+				final int srcPos2 = srcPos + doubleWidth;
+				final int d11 = allPixels[srcPos];
+				final int d12 = allPixels[srcPos + 1];
+				final int d13 = allPixels[srcPos + 2];
+				final int d21 = allPixels[srcPos1];
+				// no need in d22
+				final int d23 = allPixels[srcPos1 + 2];
+				final int d31 = allPixels[srcPos2];
+				final int d32 = allPixels[srcPos2 + 1];
+				final int d33 = allPixels[srcPos2 + 2];
+				int mask = 0xFF;
 				int pixel = 0;
-				// R, then G, then B
-				for (int c = 0; c < NCOLORS; c++) {
-					final int h = saturate(colorValuesH[c]);
-					final int v = saturate(colorValuesV[c]);
-					pixel <<= 8;
+				// B, then G, then R
+				for (int c = NCOLORS; --c >= 0; mask <<= 8) {
+					final int common = -(d11 & mask) + (d33 & mask);
+					// -1 0 1 -2 0 2 -1 0 1
+					final int h = saturate(common + (d13 & mask) - (d21 & mask) * 2 + (d23 & mask) * 2 - (d31 & mask), mask);
+					// -1, -2, -1, 0, 0, 0, 1, 2, 1
+					final int v = saturate(common - (d12 & mask) * 2 - (d13 & mask) + (d31 & mask) + (d32 & mask) * 2, mask);
 					pixel |= (h > v) ? h : v;
 				}
+
 				newPixels[newPixelsOffset++] = pixel;
 			}
 		}
