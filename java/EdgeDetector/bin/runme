@@ -2,26 +2,16 @@
 
 javac -d build src/*.java
 
-times=100
-threads="1 2 4 8 16 32"
-#times=1
-#threads=1
+#times=100
+#threads="1 2 4 8 16 32"
+times=1
+threads=4
+
+JAVAOPTS="-server -XX:CompileThreshold=1"
 
 basedir="`dirname $0`/.."
 
-#infile=Duke-Guitar.png
-infile="$basedir/images/Duke-Guitar.white.png"
-#infile=duke.png
-#infile=test.png
-
-outfile="$basedir/tmp/out.png"
-goodfile="$basedir/tmp/good.png"
-
 for i in $threads ; do
 	echo Using $i threads
-	java -classpath "$basedir/build" EdgeDetector "$infile" "$outfile" $times $i | tee "$basedir/tmp/stat.$i.log"
-	if ! diff "$outfile" "$goodfile" ; then
-		echo DIFFERENT FILES
-		exit 1
-	fi
+	java $JAVAOPTS -classpath "$basedir/build" EdgeDetector $basedir/images $times $i 123 | tee "$basedir/tmp/stat.$i.log"
 done

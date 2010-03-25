@@ -97,17 +97,26 @@ public class EdgeDetector {
 	public static void main(String args[]) {
 
 		try {
-			final String infile = args[0];
-			final String outfile = args[1];
-			final int times = Integer.parseInt(args[2]);
-			final int numThreads = Integer.parseInt(args[3]);
+			if (args.length != 4) {
+				System.err.println("Usage: java EdgeDetector {basedir} {times} {threads} {seq}");
+				System.exit(1);
+			}
 
-			System.out.println("Converting from " + infile + " to " + outfile + ", repeat " + times + " times, using " + numThreads + " threads");
-			final EdgeDetector ed = new EdgeDetector(infile, outfile, numThreads);
+			final String baseDir = args[0];
+			final int times = Integer.parseInt(args[1]);
+			final int numThreads = Integer.parseInt(args[2]);
+			final String sequence = args[3];
 
-			for (int i = 0; i < times; i++) {
-				System.out.println("Iteration " + i);
-				ed.detect();
+			for (Character c : sequence.toCharArray()) {
+				final String infile = baseDir + File.separator + "test" + c + ".png";
+				final String outfile = baseDir + File.separator + "out" + c + ".png";
+				System.out.println("Converting from " + infile + " to " + outfile + ", repeat " + times + " times, using " + numThreads + " threads");
+				final EdgeDetector ed = new EdgeDetector(infile, outfile, numThreads);
+
+				for (int i = 0; i < times; i++) {
+					System.out.println("Iteration " + i);
+					ed.detect();
+				}
 			}
 		} catch (IOException ex) {
 			System.err.println(ex);
