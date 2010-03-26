@@ -30,21 +30,31 @@ public class Processor implements Runnable {
 		final int doubleWidth = width * 2;
 		final int xLimit = width - doubleBorder;
 
-		int srcPos = width * high;
+		// srcPos points to the TOP RIGHT corner of the sample square:
+		// ..X
+		// ...
+		// ...
+		int srcPos = (width * high) + 2;
 		for (int iy = low - high; --iy >= 0; newPixelsOffset += doubleBorder, srcPos += doubleBorder) {
-			for (int ix = xLimit; --ix >= 0; srcPos++) {
+			int srcPos1 = srcPos + width;
+			int srcPos2 = srcPos + doubleWidth;
+			int pd12 = oldPixels[srcPos - 2];
+			int pd13 = oldPixels[srcPos - 1];
+			int pd22 = oldPixels[srcPos1 - 2];
+			int pd23 = oldPixels[srcPos1 - 1];
+			int pd32 = oldPixels[srcPos2 - 2];
+			int pd33 = oldPixels[srcPos2 - 1];
+			for (int ix = xLimit; --ix >= 0; srcPos++, srcPos1++, srcPos2++) {
 
-				final int srcPos1 = srcPos + width;
-				final int srcPos2 = srcPos + doubleWidth;
-				final int d11 = oldPixels[srcPos];
-				final int d12 = oldPixels[srcPos + 1];
-				final int d13 = oldPixels[srcPos + 2];
-				final int d21 = oldPixels[srcPos1];
-				// no need in d22
-				final int d23 = oldPixels[srcPos1 + 2];
-				final int d31 = oldPixels[srcPos2];
-				final int d32 = oldPixels[srcPos2 + 1];
-				final int d33 = oldPixels[srcPos2 + 2];
+				final int d11 = pd12;
+				final int d12 = pd13;
+				final int d13 = oldPixels[srcPos];
+				final int d21 = pd22;
+				/* no need in d22 */
+				final int d23 = oldPixels[srcPos1];
+				final int d31 = pd32;
+				final int d32 = pd33;
+				final int d33 = oldPixels[srcPos2];
 				int mask = 0xFF;
 				int pixel = 0;
 				// B, then G, then R
@@ -56,6 +66,12 @@ public class Processor implements Runnable {
 					final int v = saturate(common - (d12 & mask) * 2 - (d13 & mask) + (d31 & mask) + (d32 & mask) * 2, mask);
 					pixel |= (h > v) ? h : v;
 				}
+				pd12 = d12;
+				pd13 = d13;
+				pd22 = pd23;
+				pd23 = d23;
+				pd32 = d32;
+				pd33 = d33;
 
 				newPixels[newPixelsOffset++] = pixel;
 			}
